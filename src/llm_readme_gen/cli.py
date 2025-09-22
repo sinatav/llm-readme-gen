@@ -15,6 +15,7 @@ def main(argv=None):
     parser.add_argument("--work-dir", default=".cache_repo")
     parser.add_argument("--use-llm", action="store_true", help="use configured LLM to enhance text")
     parser.add_argument("--provider", choices=["openai", "deepseek"], default=None)
+    parser.add_argument("--model", default=None, help="LLM model to use (e.g., deepseek-chat or OpenAI model)")
     args = parser.parse_args(argv)
 
     cfg = Config(repo_address=args.repo, output_path=Path(args.out), work_dir=Path(args.work_dir), use_llm=args.use_llm, llm_provider=args.provider)
