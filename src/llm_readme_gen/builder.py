@@ -38,32 +38,49 @@ class ReadmeBuilder:
 
     def _compose_prompt_for_description(self, metadata: RepoMetadata) -> str:
         """
-        Compose a richer prompt for the LLM so it generates:
-        - Project purpose
-        - Installation
-        - How to run
-        - Key files/folders explanation
-        - Testing notes
-        - License info
+        Build a detailed prompt for the LLM so it writes an accurate README.
         """
-        files_list = ', '.join(metadata.top_files[:20])  # first 20 files for context
-        languages = ', '.join(metadata.languages.keys()) or 'unknown'
+        # Show top files (just 10) and include relative paths
+        top_files = "\n".join(f"- {f}" for f in metadata.top_files[:10])
+
+        # Show dependencies by language
+        dependencies = "\n".join(
+            f"- {lang}: {', '.join(pkgs)}" for lang, pkgs in (metadata.dependencies or {}).items()
+        ) or "None"
+
+        # Include first paragraph from existing README if exists
+        readme_excerpt = ""
+        readme_paths = [self.cfg.work_dir / "README.md", self.cfg.work_dir / "README.rst"]
+        for p in readme_paths:
+            if p.exists():
+                readme_excerpt = "\n".join(p.read_text(errors="ignore").splitlines()[:10])
+                break
 
         prompt = f"""
-    You are an expert software engineer and documentation writer.
+    You are a helpful assistant generating a README.md for a GitHub repository.
+    Use ONLY the information provided. Do NOT make up commands, repo names, or URLs.
 
-    Generate a detailed README for the repository "{metadata.name}".
-    Include:
+    Repository name: {metadata.name}
+    Short description: {metadata.description or 'N/A'}
+    Languages used: {', '.join(metadata.languages.keys()) or 'unknown'}
+    Top files (from repo root):
+    {top_files}
+    Dependencies:
+    {dependencies}
+    First few lines of existing README (if any):
+    {readme_excerpt or 'None'}
 
-    1. Purpose of the project: what it does and who it's for.
-    2. Main technologies and languages: {languages}.
-    3. Installation instructions.
-    4. How to run the code (examples if possible).
-    5. Explanation of important files/folders: {files_list}.
-    6. Notes about testing or environment setup if present.
-    7. License information: {metadata.license or 'Unspecified'}.
+    Write a README that includes:
 
-    Write the README in clear Markdown format. Make it concise, practical, and friendly.
+    1. Correct project title
+    2. Description (summarize functionality based on files and description)
+    3. Installation instructions (based on detected dependencies)
+    4. Usage instructions (based on detected main files)
+    5. Project structure (list top files)
+    6. Tests (if detected)
+    7. License (if available)
+
+    Do not fabricate any information. Use proper Markdown formatting.
     """
         return prompt
     
