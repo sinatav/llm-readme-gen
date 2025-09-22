@@ -80,6 +80,19 @@ Make sure you have `pytest` installed in your Python environment. If not, you ca
 pip install pytest
 ```
 
+Running the code example:
+
+```bash
+python3 -m llm_readme_gen.cli https://github.com/USERNAME/REPOSITORY_NAME.git --use-llm --provider deepseek
+```
+
+don't forget to get your api key and:
+
+```bash
+export DEEPSEEK_API_KEY="sk-or-v1-*******************"
+```
+
+
 ## License Information
 
 This project is licensed under the terms specified in the LICENSE file. Please refer to this file for more information on usage and distribution rights.
