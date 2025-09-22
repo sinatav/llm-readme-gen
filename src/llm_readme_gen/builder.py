@@ -19,7 +19,7 @@ class ReadmeBuilder:
         if self.cfg.use_llm:
             prompt = self._compose_prompt_for_description(metadata)
             try:
-                description = self.llm.generate(prompt, max_tokens=400)
+                description = self.llm.generate(prompt, max_tokens=400, temperature=0.2)
             except Exception:
                 # fallback
                 description = metadata.description or ""
