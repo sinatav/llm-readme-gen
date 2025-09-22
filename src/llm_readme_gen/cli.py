@@ -4,7 +4,7 @@ from config import Config
 from repo_fetcher import RepoFetcher
 from analyzer import RepoAnalyzer
 from builder import ReadmeBuilder
-from llm_client import NoopLLMClient, OpenAIClient
+from llm_client import NoopLLMClient, OpenAIClient, DeepSeekClient
 import os
 
 
@@ -26,13 +26,24 @@ def main(argv=None):
     metadata = analyzer.analyze()
 
     llm = None
-    if cfg.use_llm and cfg.llm_provider == "openai":
-        key = os.getenv("OPENAI_API_KEY")
-        if not key:
-            raise RuntimeError("OPENAI_API_KEY not set in environment")
-        llm = OpenAIClient(api_key=key)
+    if cfg.use_llm:
+        if cfg.llm_provider == "deepseek":
+            key = os.getenv("DEEPSEEK_API_KEY")
+            if not key:
+                raise RuntimeError("DEEPSEEK_API_KEY not set in environment")
+            model = cfg.llm_model or "deepseek-chat"
+            base_url = cfg.llm_base_url or "https://api.deepseek.com"
+            llm = DeepSeekClient(api_key=key, model=model, base_url=base_url)
+        elif cfg.llm_provider == "openai":
+            key = os.getenv("OPENAI_API_KEY")
+            if not key:
+                raise RuntimeError("OPENAI_API_KEY not set in environment")
+            llm = OpenAIClient(api_key=key)
+        else:
+            llm = NoopLLMClient()
     else:
         llm = NoopLLMClient()
+
 
     builder = ReadmeBuilder(cfg, llm=llm, template_dir=Path(__file__).parent.parent.parent / "templates")
     content = builder.render(metadata, cfg.output_path)

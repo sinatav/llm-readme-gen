@@ -6,15 +6,10 @@ build-backend = "setuptools.build_meta"
 name = "llm-readme-gen"
 version = "0.1.0"
 description = "Generate README files from repositories using LLMs like DeepSeek"
-authors = [
-  { name = "Sina Tavakkoli" }
-]
+authors = [{ name = "Sina Tavakkoli" }]
 readme = "README.md"
 requires-python = ">=3.9"
-dependencies = [
-  "requests",
-  "python-dotenv"
-]
+dependencies = ["requests", "python-dotenv"]
 
 [tool.setuptools]
 package-dir = {"" = "src"}
