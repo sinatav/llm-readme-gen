@@ -1,9 +1,9 @@
 from pathlib import Path
-from analyzer import RepoMetadata
-from template_engine import TemplateEngine
-from llm_client import LLMClient, NoopLLMClient
+from .analyzer import RepoMetadata
+from .template_engine import TemplateEngine
+from .llm_client import LLMClient, NoopLLMClient
 from typing import Optional
-from config import Config
+from .config import Config
 
 
 class ReadmeBuilder:

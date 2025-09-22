@@ -1,10 +1,10 @@
 import argparse
 from pathlib import Path
-from config import Config
-from repo_fetcher import RepoFetcher
-from analyzer import RepoAnalyzer
-from builder import ReadmeBuilder
-from llm_client import NoopLLMClient, OpenAIClient, DeepSeekClient
+from .config import Config
+from .repo_fetcher import RepoFetcher
+from .analyzer import RepoAnalyzer
+from .builder import ReadmeBuilder
+from .llm_client import NoopLLMClient, OpenAIClient, DeepSeekClient
 import os
 
 
@@ -14,7 +14,7 @@ def main(argv=None):
     parser.add_argument("--out", "-o", default="GENERATED_README.md", help="output README path")
     parser.add_argument("--work-dir", default=".cache_repo")
     parser.add_argument("--use-llm", action="store_true", help="use configured LLM to enhance text")
-    parser.add_argument("--provider", choices=["openai"], default=None)
+    parser.add_argument("--provider", choices=["openai", "deepseek"], default=None)
     args = parser.parse_args(argv)
 
     cfg = Config(repo_address=args.repo, output_path=Path(args.out), work_dir=Path(args.work_dir), use_llm=args.use_llm, llm_provider=args.provider)
@@ -50,3 +50,7 @@ def main(argv=None):
     print(f"Wrote README to {cfg.output_path}")
     print("---\nPreview:\n")
     print(content[:1000])  # small preview
+
+
+if __name__ == "__main__":
+    main()
