@@ -37,12 +37,34 @@ class ReadmeBuilder:
         return context
 
     def _compose_prompt_for_description(self, metadata: RepoMetadata) -> str:
-        prompt = f"""Write a concise (2-4 sentences) friendly README project summary for a repository with:
-- name: {metadata.name}
-- short description (if any): {metadata.description or 'N/A'}
-- main languages: {', '.join(metadata.languages.keys()) or 'unknown'}
-- notable files: {', '.join(metadata.top_files[:5])}
-Keep it practical and include one sentence about how to get started."""
+        """
+        Compose a richer prompt for the LLM so it generates:
+        - Project purpose
+        - Installation
+        - How to run
+        - Key files/folders explanation
+        - Testing notes
+        - License info
+        """
+        files_list = ', '.join(metadata.top_files[:20])  # first 20 files for context
+        languages = ', '.join(metadata.languages.keys()) or 'unknown'
+
+        prompt = f"""
+    You are an expert software engineer and documentation writer.
+
+    Generate a detailed README for the repository "{metadata.name}".
+    Include:
+
+    1. Purpose of the project: what it does and who it's for.
+    2. Main technologies and languages: {languages}.
+    3. Installation instructions.
+    4. How to run the code (examples if possible).
+    5. Explanation of important files/folders: {files_list}.
+    6. Notes about testing or environment setup if present.
+    7. License information: {metadata.license or 'Unspecified'}.
+
+    Write the README in clear Markdown format. Make it concise, practical, and friendly.
+    """
         return prompt
 
     def _generate_usage_hint(self, metadata: RepoMetadata) -> str:
