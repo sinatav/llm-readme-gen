@@ -13,16 +13,21 @@ class ReadmeBuilder:
         self.template_engine = TemplateEngine(template_dir)
 
     def build_context(self, metadata: RepoMetadata) -> dict:
-        # Basic context created from metadata; LLM can expand description + usage
+        """
+        Build context for README generation.
+        Uses LLM to generate full README if enabled.
+        """
         description = metadata.description or ""
-        # If LLM is enabled, ask it to write a polished project summary
+
         if self.cfg.use_llm:
-            prompt = self._compose_prompt_for_description(metadata)
+            # Compose full README prompt instead of just short description
+            prompt = self._compose_full_readme_prompt(metadata, self.cfg.repo_url)
             try:
-                description = self.llm.generate(prompt, max_tokens=400, temperature=0.2)
+                description = self.llm.generate(prompt, max_tokens=1500, temperature=0.2)
             except Exception:
                 # fallback
                 description = metadata.description or ""
+
         context = {
             "name": metadata.name,
             "description": description,
@@ -31,9 +36,12 @@ class ReadmeBuilder:
             "has_tests": metadata.has_tests,
             "dependencies": metadata.dependencies,
             "license": metadata.license or "Unspecified",
+            "repo_url": self.cfg.repo_url or f"https://github.com/yourusername/{metadata.name}"
         }
-        # Add a basic usage example generated heuristically or via LLM
+
+        # Optionally keep heuristic usage if you want
         context.setdefault("usage", self._generate_usage_hint(metadata))
+
         return context
 
     def _compose_prompt_for_description(self, metadata: RepoMetadata) -> str:
@@ -84,26 +92,32 @@ class ReadmeBuilder:
     """
         return prompt
     
-    def _compose_full_readme_prompt(self, metadata: RepoMetadata) -> str:
-        prompt = f"""
-        Write a detailed and structured README for a GitHub repository with the following details:
-        - **Name**: {metadata.name}
-        - **Description**: {metadata.description or 'N/A'}
-        - **Languages**: {', '.join(metadata.languages.keys()) or 'unknown'}
-        - **Top Files**: {', '.join(metadata.top_files[:5])}
-        - **Dependencies**: {', '.join(metadata.dependencies.get('python', [])) or 'None'}
-        - **License**: {metadata.license or 'Unspecified'}
-
-        The README should include:
-        1. **Project Overview**: A brief introduction to the project.
-        2. **Installation Instructions**: Steps to install and set up the project.
-        3. **Usage Guide**: How to use the project, including code examples.
-        4. **Project Structure**: Explanation of the project's directory and file structure.
-        5. **Testing**: Information on how to run tests, if applicable.
-        6. **License Information**: Details about the project's license.
-
-        Ensure the content is clear, concise, and suitable for a GitHub repository.
+    def _compose_full_readme_prompt(self, metadata: RepoMetadata, repo_url: str) -> str:
         """
+        Generate a detailed prompt for the full README using repo metadata.
+        """
+        prompt = f"""
+    You are a helpful assistant. Write a complete, factual README for the repository.
+
+    Repository Name: {metadata.name}
+    Repository URL: {repo_url}
+    Short Description: {metadata.description or 'No description provided'}
+    Languages: {', '.join(metadata.languages.keys()) or 'unknown'}
+    Top Files: {', '.join(metadata.top_files[:10])}
+    Dependencies: {metadata.dependencies or 'None detected'}
+    Tests Included: {'Yes' if metadata.has_tests else 'No'}
+    License: {metadata.license or 'Unspecified'}
+
+    Include sections:
+    - Project Overview
+    - Installation Instructions (use detected dependencies)
+    - Usage Guide (include example commands based on main files)
+    - Project Structure (list top files/directories)
+    - Testing Instructions
+    - License Information
+
+    Make the instructions accurate and specific to the repository. Avoid generic placeholders like 'repo' or 'python -m <package>'.
+    """
         return prompt
 
     def _generate_usage_hint(self, metadata: RepoMetadata) -> str:
@@ -119,7 +133,7 @@ class ReadmeBuilder:
     def render(self, metadata: RepoMetadata, output_path: Path):
     # If LLM is enabled, generate the entire README
         if self.cfg.use_llm:
-            prompt = self._compose_full_readme_prompt(metadata)
+            prompt = self._compose_full_readme_prompt(metadata, repo_url=self.cfg.repo_address)
             content = self.llm.generate(prompt, max_tokens=1500)
         else:
             # Fallback: use template-based generation
