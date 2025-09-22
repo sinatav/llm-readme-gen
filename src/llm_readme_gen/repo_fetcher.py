@@ -1,7 +1,6 @@
 import shutil
 import subprocess
 from pathlib import Path
-from typing import Tuple
 from config import Config
 
 
