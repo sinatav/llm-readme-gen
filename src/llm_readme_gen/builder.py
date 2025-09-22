@@ -66,6 +66,28 @@ class ReadmeBuilder:
     Write the README in clear Markdown format. Make it concise, practical, and friendly.
     """
         return prompt
+    
+    def _compose_full_readme_prompt(self, metadata: RepoMetadata) -> str:
+        prompt = f"""
+        Write a detailed and structured README for a GitHub repository with the following details:
+        - **Name**: {metadata.name}
+        - **Description**: {metadata.description or 'N/A'}
+        - **Languages**: {', '.join(metadata.languages.keys()) or 'unknown'}
+        - **Top Files**: {', '.join(metadata.top_files[:5])}
+        - **Dependencies**: {', '.join(metadata.dependencies.get('python', [])) or 'None'}
+        - **License**: {metadata.license or 'Unspecified'}
+
+        The README should include:
+        1. **Project Overview**: A brief introduction to the project.
+        2. **Installation Instructions**: Steps to install and set up the project.
+        3. **Usage Guide**: How to use the project, including code examples.
+        4. **Project Structure**: Explanation of the project's directory and file structure.
+        5. **Testing**: Information on how to run tests, if applicable.
+        6. **License Information**: Details about the project's license.
+
+        Ensure the content is clear, concise, and suitable for a GitHub repository.
+        """
+        return prompt
 
     def _generate_usage_hint(self, metadata: RepoMetadata) -> str:
         # heuristic usage hints
@@ -78,7 +100,14 @@ class ReadmeBuilder:
         return "See project files for usage instructions."
 
     def render(self, metadata: RepoMetadata, output_path: Path):
-        ctx = self.build_context(metadata)
-        content = self.template_engine.render("readme.md.jinja", ctx)
+    # If LLM is enabled, generate the entire README
+        if self.cfg.use_llm:
+            prompt = self._compose_full_readme_prompt(metadata)
+            content = self.llm.generate(prompt, max_tokens=1500)
+        else:
+            # Fallback: use template-based generation
+            ctx = self.build_context(metadata)
+            content = self.template_engine.render("readme.md.jinja", ctx)
+
         output_path.write_text(content, encoding="utf8")
         return content

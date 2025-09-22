@@ -32,8 +32,8 @@ def main(argv=None):
             key = os.getenv("DEEPSEEK_API_KEY")
             if not key:
                 raise RuntimeError("DEEPSEEK_API_KEY not set in environment")
-            model = cfg.llm_model or "deepseek-chat"
-            base_url = cfg.llm_base_url or "https://api.deepseek.com"
+            model = cfg.llm_model or "gpt-4o-mini"
+            base_url = cfg.llm_base_url or "https://openrouter.ai/api/v1"
             llm = DeepSeekClient(api_key=key, model=model, base_url=base_url)
         elif cfg.llm_provider == "openai":
             key = os.getenv("OPENAI_API_KEY")
