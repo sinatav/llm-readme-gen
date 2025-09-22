@@ -18,7 +18,7 @@ def main(argv=None):
     parser.add_argument("--model", default=None, help="LLM model to use (e.g., deepseek-chat or OpenAI model)")
     args = parser.parse_args(argv)
 
-    cfg = Config(repo_address=args.repo, output_path=Path(args.out), work_dir=Path(args.work_dir), use_llm=args.use_llm, llm_provider=args.provider)
+    cfg = Config(repo_address=args.repo, output_path=Path(args.out), work_dir=Path(args.work_dir), use_llm=args.use_llm, llm_provider=args.provider, llm_model=args.model,)
 
     fetcher = RepoFetcher(cfg)
     repo_root = fetcher.fetch()
